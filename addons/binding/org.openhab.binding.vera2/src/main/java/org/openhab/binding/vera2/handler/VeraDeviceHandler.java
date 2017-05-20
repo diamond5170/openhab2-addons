@@ -30,7 +30,6 @@ import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
-import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.builder.ChannelBuilder;
@@ -53,41 +52,15 @@ import org.slf4j.LoggerFactory;
  * @author Dmitriy Ponomarev
  */
 public class VeraDeviceHandler extends BaseThingHandler {
-    public static final ThingTypeUID SUPPORTED_THING_TYPE = THING_TYPE_DEVICE;
-
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     private DevicePolling devicePolling;
     private ScheduledFuture<?> pollingJob;
-    protected Calendar lastUpdate;
-
     private VeraDeviceConfiguration mConfig = null;
 
     public VeraDeviceHandler(Thing thing) {
         super(thing);
         devicePolling = new DevicePolling();
-    }
-
-    protected void refreshLastUpdate() {
-        // logger.debug("Refresh last update for device");
-        VeraBridgeHandler veraBridgeHandler = getVeraBridgeHandler();
-        if (veraBridgeHandler == null || !veraBridgeHandler.getThing().getStatus().equals(ThingStatus.ONLINE)) {
-            logger.debug("Vera handler not found or not ONLINE.");
-            return;
-        }
-        Device device = veraBridgeHandler.getController().getDevice(mConfig.getDeviceId());
-        if (device == null) {
-            logger.debug("Device not found.");
-            return;
-        }
-        Calendar lastUpdateOfDevice = Calendar.getInstance();
-        lastUpdateOfDevice.setTimeInMillis(device.lastUpdate);
-        if (lastUpdate == null || lastUpdateOfDevice.after(lastUpdate)) {
-            lastUpdate = lastUpdateOfDevice;
-        }
-
-        DateFormat formatter = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss");
-        updateProperty(DEVICE_PROP_LAST_UPDATE, formatter.format(lastUpdate.getTime()));
     }
 
     private class Initializer implements Runnable {
@@ -203,7 +176,7 @@ public class VeraDeviceHandler extends BaseThingHandler {
     @Override
     public void dispose() {
         logger.debug("Dispose Vera device handler ...");
-        if (mConfig.getDeviceId() != null) {
+        if (mConfig != null && mConfig.getDeviceId() != null) {
             mConfig.setDeviceId(null);
         }
         if (pollingJob != null && !pollingJob.isCancelled()) {
@@ -236,43 +209,38 @@ public class VeraDeviceHandler extends BaseThingHandler {
         @Override
         public void run() {
             // logger.debug("Starting polling for device: {}", getThing().getLabel());
-            if (getThing().getStatus().equals(ThingStatus.ONLINE)) {
-                // Refresh device states
-                for (Channel channel : getThing().getChannels()) {
-                    // logger.debug("Checking link state of channel: {}", channel.getLabel());
-                    if (isLinked(channel.getUID().getId())) {
-                        // logger.debug("Refresh items that linked with channel: {}", channel.getLabel());
-                        try {
-                            refreshChannel(channel);
-                        } catch (Throwable t) {
-                            if (t instanceof Exception) {
-                                logger.error("Error occurred when performing polling:{}", t.getMessage());
-                            } else if (t instanceof Error) {
-                                logger.error("Error occurred when performing polling:{}", t.getMessage());
-                            } else {
-                                logger.error("Error occurred when performing polling: Unexpected error");
-                            }
-                            if (getThing().getStatus() == ThingStatus.ONLINE) {
-                                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE,
-                                        "Error occurred when performing polling.");
-                            }
+            for (Channel channel : getThing().getChannels()) {
+                // logger.debug("Checking link state of channel: {}", channel.getLabel());
+                if (isLinked(channel.getUID().getId())) {
+                    // logger.debug("Refresh items that linked with channel: {}", channel.getLabel());
+                    try {
+                        refreshChannel(channel);
+                    } catch (Throwable t) {
+                        if (t instanceof Exception) {
+                            logger.error("Error occurred when performing polling:{}", t.getMessage());
+                        } else if (t instanceof Error) {
+                            logger.error("Error occurred when performing polling:{}", t.getMessage());
+                        } else {
+                            logger.error("Error occurred when performing polling: Unexpected error");
                         }
-                    } else {
-                        logger.debug("Polling for device: {} not possible (channel {} not linked", thing.getLabel(),
-                                channel.getLabel());
+                        if (getThing().getStatus() == ThingStatus.ONLINE) {
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE,
+                                    "Error occurred when performing polling.");
+                        }
                     }
+                } else {
+                    logger.debug("Polling for device: {} not possible (channel {} not linked", thing.getLabel(),
+                            channel.getLabel());
                 }
-                refreshLastUpdate();
-            } else {
-                logger.debug("Polling not possible, Vera device isn't ONLINE");
             }
+            refreshLastUpdate();
         }
     };
 
     private synchronized void setLocation() {
         Map<String, String> properties = getThing().getProperties();
         // Load location from properties
-        String location = properties.get(VeraBindingConstants.DEVICE_PROP_ROOM);
+        String location = properties.get(VeraBindingConstants.PROP_ROOM);
         if (location != null && !location.equals("") && getThing().getLocation() == null) {
             logger.debug("Set location to {}", location);
             ThingBuilder thingBuilder = editThing();
@@ -280,6 +248,11 @@ public class VeraDeviceHandler extends BaseThingHandler {
             thingBuilder.withLabel(thing.getLabel());
             updateThing(thingBuilder.build());
         }
+    }
+
+    protected void refreshLastUpdate() {
+        DateFormat formatter = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss");
+        updateProperty(PROP_LAST_UPDATE, formatter.format(Calendar.getInstance().getTime()));
     }
 
     protected void refreshAllChannels() {
@@ -294,36 +267,33 @@ public class VeraDeviceHandler extends BaseThingHandler {
         }
 
         // Check device id associated with channel
-        String deviceId = channel.getProperties().get("deviceId");
-        if (deviceId != null) {
-            List<Device> deviceList = veraBridgeHandler.getController().getSdata().devices;
-            if (deviceList != null) {
-                Device device = null;
-                for (Device d : deviceList) {
-                    if (d.id.equals(deviceId)) {
-                        device = d;
-                        break;
-                    }
-                }
-                if (device == null) {
-                    logger.debug("Vera device not found.");
-                    return;
-                }
+        String deviceId = channel.getProperties().get(DEVICE_CONFIG_ID);
+        if (deviceId == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE,
+                    "Not found deviceId for channel: " + channel.getChannelTypeUID());
+            logger.debug("Vera device disconnected");
+            return;
+        }
 
-                try {
-                    updateState(channel.getUID(), VeraDeviceStateConverter.toState(device, channel));
-                } catch (IllegalArgumentException iae) {
-                    logger.debug(
-                            "IllegalArgumentException ({}) during refresh channel for device: {} (level: {}) with channel: {}",
-                            iae.getMessage(), device.name, device.level, channel.getChannelTypeUID());
+        Device device = veraBridgeHandler.getController().getDevice(deviceId);
+        if (device == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE, "Channel refresh for device: " + deviceId
+                    + " with channel: " + channel.getChannelTypeUID() + " failed!");
+            logger.debug("Vera device disconnected");
+            return;
+        }
 
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE,
-                            "Channel refresh for device: " + device.name + " (level: " + device.level
-                                    + ") with channel: " + channel.getChannelTypeUID() + " failed!");
-                }
-            } else {
-                logger.warn("Devices not loaded");
-            }
+        try {
+            updateState(channel.getUID(), VeraDeviceStateConverter.toState(device, channel));
+            ThingStatusInfo statusInfo = veraBridgeHandler.getThing().getStatusInfo();
+            updateStatus(statusInfo.getStatus(), statusInfo.getStatusDetail(), statusInfo.getDescription());
+        } catch (IllegalArgumentException iae) {
+            logger.debug(
+                    "IllegalArgumentException ({}) during refresh channel for device: {} (level: {}) with channel: {}",
+                    iae.getMessage(), device.name, device.level, channel.getChannelTypeUID());
+
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE, "Channel refresh for device: " + device.name
+                    + " (level: " + device.level + ") with channel: " + channel.getChannelTypeUID() + " failed!");
         }
     }
 
@@ -367,7 +337,6 @@ public class VeraDeviceHandler extends BaseThingHandler {
             return;
         }
 
-        // Load device id from channel's properties for the compatibility of ZAutomation and ZWave devices
         final Channel channel = getThing().getChannel(channelUID.getId());
         final String deviceId = channel.getProperties().get("deviceId");
 

@@ -8,28 +8,28 @@
  */
 package org.openhab.binding.vera2.config;
 
-import static org.openhab.binding.vera2.VeraBindingConstants.DEVICE_CONFIG_ID;
+import static org.openhab.binding.vera2.VeraBindingConstants.SCENE_CONFIG_ID;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * The {@link VeraDeviceConfiguration} class defines the model for a device configuration.
+ * The {@link VeraSceneConfiguration} class defines the model for a scene configuration.
  *
  * @author Dmitriy Ponomarev
  */
-public class VeraDeviceConfiguration {
-    private String deviceId;
+public class VeraSceneConfiguration {
+    private String sceneId;
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getSceneId() {
+        return sceneId;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setSceneId(String sceneId) {
+        this.sceneId = sceneId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append(DEVICE_CONFIG_ID, this.getDeviceId()).toString();
+        return new ToStringBuilder(this).append(SCENE_CONFIG_ID, this.getSceneId()).toString();
     }
 }

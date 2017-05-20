@@ -27,9 +27,10 @@ public class VeraBindingConstants {
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "veraController");
     public static final ThingTypeUID THING_TYPE_DEVICE = new ThingTypeUID(BINDING_ID, "veraDevice");
+    public static final ThingTypeUID THING_TYPE_SCENE = new ThingTypeUID(BINDING_ID, "veraScene");
 
     public static final Set<ThingTypeUID> SUPPORTED_DEVICE_THING_TYPES_UIDS = ImmutableSet.of(THING_TYPE_BRIDGE,
-            THING_TYPE_DEVICE);
+            THING_TYPE_DEVICE, THING_TYPE_SCENE);
 
     // List of ignored devices for Discovery
     public static final Set<String> DISCOVERY_IGNORED_DEVICES = ImmutableSet.of("BatteryPolling");
@@ -83,11 +84,14 @@ public class VeraBindingConstants {
     public static final String BRIDGE_CONFIG_vera_SERVER_PORT = "veraControllerPort";
     public static final String BRIDGE_CONFIG_POLLING_INTERVAL = "pollingInterval";
 
-    public static final String DEVICE_CONFIG_DEVICE_ID = "deviceId";
-    public static final String DEVICE_PROP_ROOM = "room";
+    public static final String PROP_ROOM = "room";
+    public static final String PROP_LAST_UPDATE = "lastUpdate";
+
+    public static final String DEVICE_CONFIG_ID = "deviceId";
     public static final String DEVICE_PROP_CATEGORY = "category";
     public static final String DEVICE_PROP_SUBCATEGORY = "subcategory";
-    public static final String DEVICE_PROP_LAST_UPDATE = "lastUpdate";
+
+    public static final String SCENE_CONFIG_ID = "sceneId";
 
     /* Bridge properties */
     public static final String BRIDGE_PROP_SOFTWARE_REVISION_VERSION = "softwareRevisionVersion";

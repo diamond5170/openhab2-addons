@@ -8,8 +8,6 @@
  */
 package org.openhab.binding.vera2.handler;
 
-import static org.openhab.binding.vera2.VeraBindingConstants.THING_TYPE_BRIDGE;
-
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +18,6 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
@@ -36,9 +33,6 @@ import org.slf4j.LoggerFactory;
  * @author Dmitriy Ponomarev
  */
 public class VeraBridgeHandler extends BaseBridgeHandler {
-
-    public static final ThingTypeUID SUPPORTED_THING_TYPE = THING_TYPE_BRIDGE;
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private BridgePolling bridgePolling;

@@ -8,10 +8,11 @@
  */
 package org.openhab.binding.vera2.internal;
 
+import static org.openhab.binding.vera2.VeraBindingConstants.*;
+
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -22,10 +23,9 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.openhab.binding.vera2.handler.VeraBridgeHandler;
 import org.openhab.binding.vera2.handler.VeraDeviceHandler;
+import org.openhab.binding.vera2.handler.VeraSceneHandler;
 import org.openhab.binding.vera2.internal.discovery.VeraDeviceDiscoveryService;
 import org.osgi.framework.ServiceRegistration;
-
-import com.google.common.collect.ImmutableSet;
 
 /**
  * The {@link VeraHandlerFactory} is responsible for creating things and thing
@@ -34,25 +34,23 @@ import com.google.common.collect.ImmutableSet;
  * @author Dmitriy Ponomarev
  */
 public class VeraHandlerFactory extends BaseThingHandlerFactory {
-
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = ImmutableSet
-            .of(VeraBridgeHandler.SUPPORTED_THING_TYPE, VeraDeviceHandler.SUPPORTED_THING_TYPE);
-
     private Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
-        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
+        return SUPPORTED_DEVICE_THING_TYPES_UIDS.contains(thingTypeUID);
     }
 
     @Override
     protected ThingHandler createHandler(Thing thing) {
-        if (VeraBridgeHandler.SUPPORTED_THING_TYPE.equals(thing.getThingTypeUID())) {
+        if (THING_TYPE_BRIDGE.equals(thing.getThingTypeUID())) {
             VeraBridgeHandler handler = new VeraBridgeHandler((Bridge) thing);
             registerDeviceDiscoveryService(handler);
             return handler;
-        } else if (VeraDeviceHandler.SUPPORTED_THING_TYPE.equals(thing.getThingTypeUID())) {
+        } else if (THING_TYPE_DEVICE.equals(thing.getThingTypeUID())) {
             return new VeraDeviceHandler(thing);
+        } else if (THING_TYPE_SCENE.equals(thing.getThingTypeUID())) {
+            return new VeraSceneHandler(thing);
         } else {
             return null;
         }

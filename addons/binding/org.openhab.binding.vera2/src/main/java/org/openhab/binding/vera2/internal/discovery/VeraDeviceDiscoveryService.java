@@ -8,6 +8,8 @@
  */
 package org.openhab.binding.vera2.internal.discovery;
 
+import static org.openhab.binding.vera2.VeraBindingConstants.*;
+
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -17,8 +19,8 @@ import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingUID;
-import org.openhab.binding.vera2.VeraBindingConstants;
 import org.openhab.binding.vera2.controller.Vera.json.Device;
+import org.openhab.binding.vera2.controller.Vera.json.Scene;
 import org.openhab.binding.vera2.handler.VeraBridgeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +43,7 @@ public class VeraDeviceDiscoveryService extends AbstractDiscoveryService {
     private ScheduledFuture<?> mVeraDeviceScanningJob;
 
     public VeraDeviceDiscoveryService(VeraBridgeHandler bridgeHandler) {
-        super(VeraBindingConstants.SUPPORTED_DEVICE_THING_TYPES_UIDS, SEARCH_TIME);
+        super(SUPPORTED_DEVICE_THING_TYPES_UIDS, SEARCH_TIME);
         logger.debug("Initializing VeraDeviceDiscoveryService");
         mBridgeHandler = bridgeHandler;
         mVeraDeviceScanningRunnable = new VeraDeviceScan();
@@ -59,20 +61,27 @@ public class VeraDeviceDiscoveryService extends AbstractDiscoveryService {
         final ThingUID bridgeUID = mBridgeHandler.getThing().getUID();
 
         List<Device> deviceList = mBridgeHandler.getData().devices;
-
         for (Device device : deviceList) {
             if (device.category.equals("0")) {
                 continue;
             }
-            ThingUID thingUID = new ThingUID(VeraBindingConstants.THING_TYPE_DEVICE, mBridgeHandler.getThing().getUID(),
-                    device.id);
+            ThingUID thingUID = new ThingUID(THING_TYPE_DEVICE, mBridgeHandler.getThing().getUID(), device.id);
             DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withLabel(device.uName)
-                    .withBridge(bridgeUID).withProperty(VeraBindingConstants.DEVICE_CONFIG_DEVICE_ID, device.id)
-                    .withProperty(VeraBindingConstants.DEVICE_PROP_ROOM, device.room)
-                    .withProperty(VeraBindingConstants.DEVICE_PROP_CATEGORY, device.category)
-                    .withProperty(VeraBindingConstants.DEVICE_PROP_SUBCATEGORY, device.subcategory).build();
+                    .withBridge(bridgeUID).withProperty(DEVICE_CONFIG_ID, device.id)
+                    .withProperty(PROP_ROOM, device.room).withProperty(DEVICE_PROP_CATEGORY, device.category)
+                    .withProperty(DEVICE_PROP_SUBCATEGORY, device.subcategory).build();
             thingDiscovered(discoveryResult);
             logger.debug("Vera device found: {}, {}", device.id, device.name);
+        }
+
+        List<Scene> sceneList = mBridgeHandler.getData().scenes;
+        for (Scene scene : sceneList) {
+            ThingUID thingUID = new ThingUID(THING_TYPE_SCENE, mBridgeHandler.getThing().getUID(), scene.id);
+            DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID).withLabel(scene.name)
+                    .withBridge(bridgeUID).withProperty(SCENE_CONFIG_ID, scene.id).withProperty(PROP_ROOM, scene.room)
+                    .build();
+            thingDiscovered(discoveryResult);
+            logger.debug("Vera scene found: {}, {}", scene.id, scene.name);
         }
     }
 

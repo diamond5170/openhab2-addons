@@ -116,7 +116,7 @@ public class Controller {
         HttpURLConnection connection;
         String response = null;
         try {
-            // log.info("Sending command: {}", request);
+            // log.info("Sending command: " + request);
             url = new URL(request);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -152,9 +152,8 @@ public class Controller {
         name = name.trim();
         return name;
     }
-    
-    private String getUrl()
-    {
+
+    private String getUrl() {
         return "http://" + veraHost + ":" + veraPort + "/data_request";
     }
 
@@ -162,10 +161,9 @@ public class Controller {
         sendCommand("http://" + veraHost + ":" + veraPort + "/data_request?id=action&DeviceNum=" + d.id + "&serviceId="
                 + service + "&action=SetTarget&newTargetValue=" + status, null);
     }
-    
+
     public Sdata updateSdata() {
-        String result = request(getUrl() + "?id=sdata&output_format=json",
-                null);
+        String result = request(getUrl() + "?id=sdata&output_format=json", null);
         Sdata theSdata = result == null ? null : new Gson().fromJson(result, Sdata.class);
         if (theSdata != null) {
             denormalizeSdata(theSdata);
@@ -173,7 +171,7 @@ public class Controller {
         sdata = theSdata;
         return theSdata;
     }
-    
+
     public void turnDeviceOn(Device d) {
         d.status = "1";
         if (d.category.equals("7")) {
@@ -201,7 +199,7 @@ public class Controller {
 
     public void runScene(String id) {
         sendCommand(getUrl() + "?id=action&SceneNum=" + id
-                + "&serviceId=urn:micasaverde-com:serviceId:HomeAutomationGateway1", null);
+                + "&serviceId=urn:micasaverde-com:serviceId:HomeAutomationGateway1&action=RunScene", null);
     }
 
     public boolean isConnected() {
@@ -212,6 +210,15 @@ public class Controller {
         for (Device d : sdata.devices) {
             if (d.id.equals(deviceId)) {
                 return d;
+            }
+        }
+        return null;
+    }
+
+    public Scene getScene(String sceneId) {
+        for (Scene s : sdata.scenes) {
+            if (s.id.equals(sceneId)) {
+                return s;
             }
         }
         return null;

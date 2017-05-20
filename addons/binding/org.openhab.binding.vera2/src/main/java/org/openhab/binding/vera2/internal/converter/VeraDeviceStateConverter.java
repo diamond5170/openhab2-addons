@@ -56,18 +56,9 @@ public class VeraDeviceStateConverter {
                 switch (subcategory) {
                     case 1:
                         return getDoorlockState(device.tripped.equals("1") ? "0" : "1");
-                    case 2:
-                        return getBinaryState(device.tripped);
-                    case 3:
-                        return getBinaryState(device.tripped);
-                    case 4:
-                        return getBinaryState(device.tripped);
-                    case 5:
-                        return getBinaryState(device.tripped);
-                    case 6:
+                    default:
                         return getBinaryState(device.tripped);
                 }
-                break;
             case 5: // TODO HVAC
                 logger.warn("TODO: HVAC: {}, {}, {}, {}", device.id, device.name, device.category, device.categoryName);
                 break;
@@ -76,7 +67,7 @@ public class VeraDeviceStateConverter {
                         device.categoryName);
                 break;
             case 7: // Door Lock
-                return getDoorlockState(device.locked);
+                return getBinaryState(device.locked);
             case 8: // Window Covering
                 return getPercentState(device.level);
             case 9: // TODO Remote Control

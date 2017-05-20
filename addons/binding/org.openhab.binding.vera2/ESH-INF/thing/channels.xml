@@ -219,7 +219,16 @@
         <category>Temperature</category>
         <state readOnly="false" />
     </channel-type>
-        
+    
+    <!-- TODO -->
+    <channel-type id="sceneButton">
+        <item-type>Switch</item-type>
+        <label>Run scene</label>
+        <description>This channel represents a scene button.</description>
+        <category>Switch</category>
+        <state readOnly="false" />
+    </channel-type>
+
     <!-- Special channel types -->
     
     <channel-type id="actions">

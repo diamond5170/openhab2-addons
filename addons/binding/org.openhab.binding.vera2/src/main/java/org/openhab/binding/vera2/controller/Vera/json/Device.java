@@ -20,5 +20,4 @@ public class Device {
     public String tripped;
     public String categoryName;
     public String uName;
-    public long lastUpdate;
 }
